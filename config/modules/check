@@ -17,10 +17,16 @@ check(){
         exist)
             test ! -e "$2" && msg error "No such file or directory: $2" || return 0
             ;;
+        SensitiveResources)
+            for rs in `find . | egrep -i "$SENSITIVE_RESOURCES"`
+            do
+                remove "$rs"
+            done
+            ;;
         user|users|Permission)
             case $APP_ENV in
                 DEV)    ALLOWED_USERS="`echo ${APP_ENV}-${APP_OBJ} | tr A-Z a-z`" ;;
-                QA|UAT) ALLOWED_USERS="qa"  ;;
+                QA)     ALLOWED_USERS="qa"  ;;
                 PD|PRE) ALLOWED_USERS="qa"  ;;
             esac
 
@@ -62,21 +68,6 @@ check(){
             rt_code="$?"
 
             test $rt_code != 0 && msg error "Detected failure in last step || return 0"
-            ;;
-        http)
-            case "$2" in
-                code)
-
-                    msg done "Check http not ready. Skipped"
-                    require_code=$3
-                     request_url="$4"
-
-                    test -z "$require_code"  && msg e "check http: Missing argument"
-                    test -z "$request_url"   && msg e "check http: Missing argument"
-                    test -z "$CURL_TIME_OUT" && CURL_TIME_OUT=5
-                    http_code=`curl -IL --time-out=$CURL_TIME_OUT $request_url -w %{http_code} | tail -1`
-                    ;;
-            esac
             ;;
     esac
 }
